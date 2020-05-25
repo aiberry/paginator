@@ -2,7 +2,7 @@ import { action as a, observable as o, computed as c} from 'mobx';
 import { textNotes } from './constants'
 
 export class AppState {
-  @o notes = textNotes.map((text, index) => ({text, id: index, isVisible: false, isCurrent: !Boolean(index), width: 0}))
+  @o notes = textNotes.map((text, index) => ({text, id: index, isVisible: !Boolean(index), isCurrent: !Boolean(index), width: 0}))
   notesContainerRef: HTMLElement | null = null; 
   btnPrevRef: HTMLButtonElement | null = null;
   btnNextRef: HTMLButtonElement | null = null;
@@ -13,44 +13,40 @@ export class AppState {
     return this.notes.findIndex(note => note.isCurrent === true)
   }
  
-  launchFillingToTheRight (startIndex: number) {
+  fillRight (startIndex: number = 0, leftSpace: number = this.freeSpace) {
     const { notes } = this;
-    let availableSpace = this.freeSpace - notes[startIndex].width;
-    notes[startIndex].isVisible = true;
+    let spaceToFill = leftSpace;
     for (let i = startIndex + 1; i < notes.length; i++) {
-      availableSpace = availableSpace - notes[i].width;
-      notes[i].isVisible = availableSpace > 0;
+      spaceToFill = spaceToFill - notes[i].width;
+      notes[i].isVisible = spaceToFill > 0;
     }
-    for (let i = startIndex - 1; i >= 0; i--) {
-      availableSpace = availableSpace - notes[i].width;
-      notes[i].isVisible = availableSpace > 0;
-    }
+    return spaceToFill;
   }
-  
-  launchFillingToTheLeft(startIndex: number) {
+
+  fillLeft (startIndex: number, leftSpace: number) {
     const { notes } = this;
-    let availableSpace = this.freeSpace - notes[startIndex].width;
-    notes[startIndex].isVisible = true;
-    for (let i = startIndex - 1; i >=0 ; i--) {
-      availableSpace = availableSpace - notes[i].width;
-      notes[i].isVisible = availableSpace > 0;
+    let spaceToFill = leftSpace;
+    for (let i = startIndex - 1; i >=0; i--) {
+      spaceToFill = spaceToFill - notes[i].width;
+      notes[i].isVisible = spaceToFill > 0;
     }
-    for (let i = startIndex + 1; i < notes.length; i++) {
-      availableSpace = availableSpace - notes[i].width;
-      notes[i].isVisible = availableSpace > 0;
-    }
+    return spaceToFill;
   }
 
   @a setPrevAsCurrent = () => {
     const { notes, indexOfCurrent } = this;
     const indexOfPrevious = indexOfCurrent - 1;
     if (notes[indexOfPrevious]) {
+      notes[indexOfPrevious].isCurrent = true;
       notes[indexOfCurrent].isCurrent = false;
-      notes[indexOfPrevious].isCurrent = true; 
       if (!notes[indexOfPrevious].isVisible) {
-        this.launchFillingToTheLeft(indexOfPrevious)
+        notes[indexOfPrevious].isVisible = true;
+        this.fillRight(
+          indexOfPrevious, 
+          this.fillLeft(indexOfPrevious, this.freeSpace - notes[indexOfPrevious].width)
+        )
       }
-      if (this.btnPrevRef && !notes[indexOfCurrent - 2]) {
+      if (this.btnPrevRef && !notes[indexOfPrevious - 1]) {
       this.btnPrevRef.setAttribute('disabled', 'true')
       }
       if (this.btnNextRef) {
@@ -66,9 +62,13 @@ export class AppState {
       notes[indexOfNext].isCurrent = true; 
       notes[indexOfCurrent].isCurrent = false;
       if(!notes[indexOfNext].isVisible) {
-        this.launchFillingToTheRight(indexOfNext)
+        notes[indexOfNext].isVisible = true;
+        this.fillLeft(
+          indexOfNext, 
+          this.fillRight(indexOfNext, this.freeSpace - notes[indexOfNext].width)
+        )
       }
-      if (this.btnNextRef && !notes[indexOfCurrent + 2]) {
+      if (this.btnNextRef && !notes[indexOfNext + 1]) {
         this.btnNextRef.setAttribute('disabled', 'true')
       }
       if (this.btnPrevRef) {
@@ -78,34 +78,30 @@ export class AppState {
   }
 
   @a onNoteClick = (id: number) => {
-    const { notes } = this;
-    notes[this.indexOfCurrent].isCurrent = false;
+    const { notes, indexOfCurrent } = this;
     const newNoteIndex = notes.findIndex(note => note.id === id);
-    if (notes[newNoteIndex]) {
-      notes[newNoteIndex].isCurrent = true;
-
-      if (this.btnPrevRef) {
-        if (newNoteIndex !== 0) {
-          this.btnPrevRef.removeAttribute('disabled')
-        } else {
-          this.btnPrevRef.setAttribute('disabled', 'true')
-        }
+    notes[indexOfCurrent].isCurrent = false;
+    notes[newNoteIndex].isCurrent = true;
+    if (this.btnPrevRef) {
+      if (newNoteIndex !== 0) {
+        this.btnPrevRef.removeAttribute('disabled');
+      } else {
+        this.btnPrevRef.setAttribute('disabled', 'true');
       }
-      if (this.btnNextRef) {
-        if (newNoteIndex !== notes.length - 1) {
-          this.btnNextRef.removeAttribute('disabled')
-        } else {
-          this.btnNextRef.setAttribute('disabled', 'true')
-        }
+    }
+    if (this.btnNextRef) {
+      if (newNoteIndex !== notes.length - 1) {
+        this.btnNextRef.removeAttribute('disabled');
+      } else {
+        this.btnNextRef.setAttribute('disabled', 'true');
       }
     }
   }
 
   @a calculateFilling = () => {
     const { indexOfCurrent , notes } = this;
-    let availableSpace = this.freeSpace;
-    notes[indexOfCurrent].isVisible = true;
-    availableSpace = availableSpace - notes[indexOfCurrent].width;
+    let availableSpace = this.freeSpace - notes[indexOfCurrent].width;
+
     for (let i = 1; i < indexOfCurrent || i < notes.length - indexOfCurrent ; i++) {
       const indexOfRight = indexOfCurrent + i;
       const indexOfLeft = indexOfCurrent - i;

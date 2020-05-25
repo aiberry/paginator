@@ -12,7 +12,7 @@ export default class App extends React.Component<IAppProps> {
 
   componentDidMount() {
     window.addEventListener('resize', this.appState.calculateFilling)
-    this.appState.calculateFilling();
+    this.appState.fillRight();
   }
 
   render() {

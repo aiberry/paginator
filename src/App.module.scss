@@ -1,48 +1,42 @@
 .root {
+  box-sizing: border-box;
   width: 50%;
   margin: 0 auto;
   height: min-content;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: burlywood;
+  background-color: #357b4e26;
   padding: 0 10px;
 }
 
-button {
+.root button {
+  background-color: #76ce72;
   width: 50px;
-  height: 50px;
+  height: 42px;
+  border-radius: 10px;
 }
 
 .notesContainer {
   margin: 0 auto;
   width: 85%;
   height: 100px;
-  background-color: #ff000036;
+  background-color: #ff000000;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  
 }
 
 .notesContainer span {
   padding: 5px 5px;
-  border: solid black 1px;
+  border: solid #50c764b8 2px;
   border-radius: 20px;
-  color: #bf3600;
   cursor: pointer;
+  background-color: white;
 }
 
-.container {
-  width: 460px;
-  max-width: 100%;
-  padding: 2rem;
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2),
-    0px 1px 1px 0px rgba(0, 0, 0, 0.14), 0px 2px 1px -1px rgba(0, 0, 0, 0.12);
-}
-
-.currentNote {
-  background-color:#f39407;
+.notesContainer .currentNote {
+  background-color: #76ce72;
 }
 
 .hiddenNote { 
@@ -52,9 +46,15 @@ button {
   left: -9999px;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 600px) {
   .root {
     width: 100%;
     padding: 0 8px;
+  }
+
+  .root button {
+    width: 35px;
+    height: 35px;
+    padding: 0;
   }
 }
